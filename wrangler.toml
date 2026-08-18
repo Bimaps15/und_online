@@ -1,0 +1,12 @@
+name = "undangan-bima-naya"
+compatibility_date = "2026-08-08"
+pages_build_output_dir = "dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "wedding-db"
+database_id = "814ffbb9-8d6d-4b3a-8947-9c50fa93e68d"
+
+
+[vars]
+MODERATE_WISHES = "false"

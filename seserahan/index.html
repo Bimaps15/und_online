@@ -1,0 +1,766 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Budget & Seserahan Nikah - Bima & Alviana</title>
+    <style>
+      :root{--bg:#f7f4ee;--ink:#202326;--muted:#677071;--line:#ded8ce;--green:#207868;--dark:#15594d;--rose:#b94d63;--gold:#b9812b;--blue:#2b678f}*{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,rgba(32,120,104,.1),transparent 32rem),linear-gradient(315deg,rgba(185,77,99,.1),transparent 30rem),var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select,textarea{font:inherit}.app{width:min(980px,100%);margin:0 auto;padding:18px}.top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}.back-link{display:inline-flex;align-items:center;gap:6px;margin-bottom:12px;color:var(--dark);font-size:.85rem;font-weight:700;text-decoration:none}.back-link:hover{text-decoration:underline}.eyebrow{margin:0 0 5px;color:var(--dark);font-size:.78rem;font-weight:800;text-transform:uppercase}h1{margin:0 0 4px;font-size:clamp(1.8rem,7vw,3rem);line-height:1.03}h2{margin:0;font-size:1.05rem}.muted{color:var(--muted)}.status{border:1px solid var(--line);border-radius:999px;padding:8px 12px;background:#ffffffbf;color:var(--gold);font-size:.8rem;font-weight:800;white-space:nowrap;transition:all .2s ease}.status.online{color:var(--green);border-color:rgba(32,120,104,.3);background:rgba(32,120,104,.08)}.status.offline{color:var(--rose);border-color:rgba(185,77,99,.3);background:rgba(185,77,99,.08)}.status.saving,.status.verifying{color:var(--blue);border-color:rgba(43,103,143,.3);background:rgba(43,103,143,.08)}.panel,.metric,.card,.bar-wrap,.tools,.diag-panel{border:1px solid rgba(90,77,61,.14);border-radius:8px;background:#ffffffd9;box-shadow:0 14px 36px rgba(58,48,34,.1)}.summary{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0}.metric{padding:14px}.metric span,.money span,label{display:block;color:var(--muted);font-size:.8rem;font-weight:750}.metric strong{display:block;margin-top:7px;font-size:1.35rem}.main{background:#143f39;color:#fff}.main span{color:#ffffffc9}.bar-wrap{padding:14px;margin-bottom:12px}.bar-head{display:flex;justify-content:space-between;margin-bottom:9px;font-weight:800;color:var(--muted)}.bar{height:12px;overflow:hidden;border-radius:999px;background:#e9e1d6}.bar span{display:block;width:0;height:100%;background:linear-gradient(90deg,var(--green),#74a35a);transition:width .3s ease}.panel{padding:14px;margin-bottom:12px}.head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.wide{grid-column:1/-1}label{display:grid;gap:6px}input,select,textarea{width:100%;min-height:43px;border:1px solid var(--line);border-radius:8px;padding:10px 11px;background:#fffdf9;color:var(--ink)}textarea{min-height:92px;resize:vertical}button{min-height:41px;border:0;border-radius:8px;padding:10px 13px;background:#ece5da;color:#34302b;cursor:pointer;font-weight:850;transition:opacity .15s ease}button:hover{opacity:.88}button:active{transform:scale(.98)}.primary{background:var(--green);color:#fff}.danger{background:rgba(185,77,99,.13);color:var(--rose)}.tools{display:grid;grid-template-columns:1fr 150px;gap:10px;padding:10px;margin-bottom:12px}.items{display:grid;gap:10px}.card{padding:14px}.card-top{display:flex;justify-content:space-between;gap:8px}.cat{color:var(--blue);font-size:.76rem;font-weight:900;text-transform:uppercase}.card h3{margin:3px 0 0;font-size:1.05rem}.badge{border-radius:999px;padding:6px 9px;background:#efe7dc;color:var(--gold);font-size:.76rem;font-weight:900;white-space:nowrap}.badge.lunas{background:rgba(32,120,104,.12);color:var(--green)}.badge.belum{background:rgba(185,77,99,.12);color:var(--rose)}.money{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:13px 0}.money strong{display:block;margin-top:4px}.note{margin:0 0 12px;color:var(--muted);font-size:.9rem;word-break:break-word}.note a{color:var(--blue);text-decoration:none}.note a:hover{text-decoration:underline}.actions,.share-actions{display:flex;flex-wrap:wrap;gap:8px}.empty{padding:24px;border:1px dashed var(--line);border-radius:8px;text-align:center;color:var(--muted)}.hint{margin:8px 0 0;color:var(--muted);font-size:.86rem;line-height:1.5}.sync-row{display:grid;grid-template-columns:1fr auto auto auto auto;gap:8px}.modal{position:fixed;inset:0;display:none;align-items:flex-end;justify-content:center;padding:14px;background:rgba(32,35,38,.42);z-index:20}.modal.open{display:flex}.modal-card{width:min(720px,100%);max-height:92vh;overflow:auto;border-radius:8px;background:#fffdf9;padding:16px;box-shadow:0 22px 60px rgba(0,0,0,.26)}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+      /* Diagnostic Panel (?debug=1) */
+      .diag-panel{display:none;margin-top:20px;padding:14px;background:#1e293b;color:#f8fafc;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:.82rem}
+      .diag-panel.show{display:block}.diag-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;border-bottom:1px solid #334155;padding-bottom:6px}.diag-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-bottom:10px}.diag-item{background:#0f172a;padding:8px;border-radius:6px}.diag-item span{display:block;color:#94a3b8;font-size:.72rem}.diag-item strong{color:#38bdf8}
+      @media(min-width:720px){.modal{align-items:center}}@media(max-width:720px){.app{padding:12px}.top,.summary,.grid,.tools,.sync-row{display:grid;grid-template-columns:1fr}.money{grid-template-columns:1fr}.status{justify-self:start}.head{align-items:stretch;flex-direction:column}.modal-actions{display:grid;grid-template-columns:1fr}}
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <a href="/" class="back-link">← Kembali ke Undangan (bimalvi.my.id)</a>
+
+      <header class="top">
+        <div>
+          <p class="eyebrow">Budget & Seserahan Nikah</p>
+          <h1 id="title">Bima & Alviana</h1>
+          <p id="date" class="muted">Tanggal nikah belum diisi</p>
+        </div>
+        <span id="status" class="status">Memeriksa koneksi...</span>
+      </header>
+
+      <section class="panel">
+        <div class="head"><h2>Koneksi Google Sheet</h2></div>
+        <div class="sync-row">
+          <input id="scriptUrl" placeholder="Tempel URL Web App Google Apps Script (/exec)">
+          <button id="saveUrl" class="primary" type="button">Simpan URL</button>
+          <button id="pullBtn" type="button">Ambil Data</button>
+          <button id="shareLinkBtn" type="button" title="Salin link auto-connect untuk dibagikan">Salin Link</button>
+          <button id="resetUrlBtn" type="button" title="Reset URL ke bawaan sistem">Reset</button>
+        </div>
+        <p class="hint">Tersambung ke Google Spreadsheet via Google Apps Script. Perubahan di web diverifikasi dan disimpan langsung ke Google Sheet.</p>
+      </section>
+
+      <section class="summary">
+        <div class="metric main"><span>Total Estimasi</span><strong id="est">Rp0</strong></div>
+        <div class="metric"><span>Sudah Dibayar</span><strong id="paid">Rp0</strong></div>
+        <div class="metric"><span>Sisa Tagihan</span><strong id="remain">Rp0</strong></div>
+        <div class="metric"><span>Sisa dari Target</span><strong id="left">Rp0</strong></div>
+      </section>
+
+      <section class="bar-wrap">
+        <div class="bar-head"><span>Progress pembayaran</span><strong id="pct">0%</strong></div>
+        <div class="bar"><span id="bar"></span></div>
+      </section>
+
+      <section class="panel">
+        <div class="head">
+          <h2>Pengaturan Pasangan</h2>
+          <button id="saveSettings" class="primary" type="button">Simpan</button>
+        </div>
+        <div class="grid">
+          <label>Nama calon 1<input id="bride"></label>
+          <label>Nama calon 2<input id="groom"></label>
+          <label>Tanggal nikah<input id="wdate" type="date"></label>
+          <label>Target budget<input id="target" inputmode="numeric"></label>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="head"><h2>Tambah Pos Biaya & Seserahan</h2></div>
+        <form id="form" class="grid">
+          <label class="wide">Nama biaya / seserahan<input name="name" placeholder="Contoh: Paket Box Seserahan / Dekorasi" required></label>
+          <label>Kategori<select name="category"><option>Alat Ibadah</option><option>Skincare</option><option>Body Care</option><option>Pakaian</option><option>Pakaian Dalam</option><option>Aksesoris</option><option>Makeup</option><option>Toiletries</option><option>Set Perhiasan</option><option>Catering</option><option>Perlengkapan Seserahan</option><option>Venue</option><option>Dekorasi</option><option>Busana</option><option>Dokumentasi</option><option>Undangan</option><option>Hiburan</option><option>Lainnya</option></select></label>
+          <label>Estimasi<input name="estimated" inputmode="numeric" required></label>
+          <label>Dibayar<input name="paid" inputmode="numeric" value="0"></label>
+          <label>Jatuh tempo<input name="dueDate" type="date"></label>
+          <label class="wide">Catatan<input name="note" placeholder="Nomor vendor, termin, atau detail isi box"></label>
+          <button class="primary wide" type="submit">Tambah biaya</button>
+        </form>
+      </section>
+
+      <section class="panel">
+        <div class="head"><h2>Backup Manual</h2></div>
+        <div class="grid">
+          <label class="wide">Data backup<textarea id="backupText" placeholder="Tekan Export untuk backup manual, atau tempel backup lalu tekan Import"></textarea></label>
+          <div class="share-actions wide">
+            <button id="exportBtn" type="button">Export</button>
+            <button id="importBtn" type="button">Import</button>
+            <button id="resetBtn" class="danger" type="button">Reset Data Lokal</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="tools">
+        <input id="search" placeholder="Cari biaya, seserahan, atau kategori">
+        <select id="filter"><option value="semua">Semua Status</option><option value="belum">Belum</option><option value="dp">DP</option><option value="lunas">Lunas</option></select>
+      </section>
+
+      <section id="items" class="items"></section>
+
+      <!-- Diagnostic Panel (?debug=1) -->
+      <section id="diagPanel" class="diag-panel">
+        <div class="diag-head">
+          <strong>🔍 DIAGNOSTIC PANEL</strong>
+          <button id="diagHealthBtn" type="button" style="padding:4px 8px;min-height:auto;font-size:.75rem">Check Health</button>
+        </div>
+        <div class="diag-grid">
+          <div class="diag-item"><span>CONNECTION</span><strong id="diagConn">CHECKING</strong></div>
+          <div class="diag-item"><span>SYNC STATE</span><strong id="diagState">IDLE</strong></div>
+          <div class="diag-item"><span>CLIENT REVISION</span><strong id="diagClientRev">0</strong></div>
+          <div class="diag-item"><span>SERVER REVISION</span><strong id="diagServerRev">0</strong></div>
+          <div class="diag-item"><span>TARGET SHEET ID</span><strong>167218541</strong></div>
+          <div class="diag-item"><span>LAST PULL</span><strong id="diagLastPull">-</strong></div>
+          <div class="diag-item"><span>LAST PUSH</span><strong id="diagLastPush">-</strong></div>
+          <div class="diag-item"><span>LAST ERROR</span><strong id="diagLastError" style="color:#f87171">NONE</strong></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+      <form id="editForm" class="modal-card">
+        <div class="head">
+          <h2 id="editTitle">Edit Biaya</h2>
+        </div>
+        <div class="grid">
+          <input id="editId" type="hidden">
+          <label class="wide">Nama biaya<input id="editName" required></label>
+          <label>Kategori<input id="editCategory" required></label>
+          <label>Harga / estimasi<input id="editEstimated" inputmode="numeric" required></label>
+          <label>Sudah dibayar<input id="editPaid" inputmode="numeric"></label>
+          <label>Jatuh tempo<input id="editDueDate" type="date"></label>
+          <label class="wide">Catatan<textarea id="editNote"></textarea></label>
+        </div>
+        <div class="modal-actions">
+          <button id="cancelEdit" type="button">Batal</button>
+          <button class="primary" type="submit">Simpan Perubahan</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Hidden Form for Single POST to Google Apps Script -->
+    <form id="sheetPostForm" method="POST" target="sheet_sink" style="display:none">
+      <input type="hidden" name="action" value="save">
+      <textarea id="sheetPayloadInput" name="payload"></textarea>
+    </form>
+    <iframe id="sheet_sink" name="sheet_sink" style="display:none"></iframe>
+
+    <script>
+      /**
+       * =======================================================================
+       * BUDGET & SESERAHAN NIKAH - SYNC ENGINE WITH REAL WRITE VERIFICATION
+       * =======================================================================
+       */
+      const STORE_KEY = "budgetNikahSheetData";
+      const URL_KEY = "budgetNikahScriptUrl";
+      const REV_KEY = "budgetNikahClientRevision";
+      const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby2AP0iagIOiYp4NrBixm0Fg9ZUfjgj2_PtADhqdEtU83Saiw6ddBBsRVDqifR-u_EwdA/exec";
+      const DEBUG_SYNC = true;
+
+      // Seed data as fallback cache
+      const seed = {
+        couple: { bride: "Alviana", groom: "Bima", weddingDate: "2026-12-11" },
+        targetBudget: 6181610,
+        items: [
+          { id: "seserahan-2", name: "Sajadah 2", category: "Alat Ibadah", estimated: 115309, paid: 115309, dueDate: "", note: "Shopee", status: "lunas", _type: "seserahan", _row: 2 },
+          { id: "seserahan-3", name: "Mukena", category: "Alat Ibadah", estimated: 52255, paid: 52255, dueDate: "", note: "Shopee", status: "lunas", _type: "seserahan", _row: 3 },
+          { id: "seserahan-4", name: "Al-Quran", category: "Alat Ibadah", estimated: 79273, paid: 79273, dueDate: "", note: "Shopee", status: "lunas", _type: "seserahan", _row: 4 },
+          { id: "seserahan-5", name: "Tasbih", category: "Alat Ibadah", estimated: 6892, paid: 6892, dueDate: "", note: "Shopee", status: "lunas", _type: "seserahan", _row: 5 },
+          { id: "seserahan-43", name: "Cincin Emas 22k 1gr", category: "Set Perhiasan", estimated: 0, paid: 0, dueDate: "", note: "Offline", status: "lunas", _type: "seserahan", _row: 43 }
+        ],
+        updatedAt: new Date().toISOString()
+      };
+
+      const $ = (selector) => document.querySelector(selector);
+      const fmt = new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 });
+
+      // State Machine
+      let syncState = "idle"; // "idle" | "dirty" | "saving" | "verifying" | "synced" | "error"
+      let isDirty = false;
+      let currentRevision = Number(localStorage.getItem(REV_KEY) || 0);
+      let lastServerRevision = 0;
+      let lastPullTime = null;
+      let lastPushTime = null;
+      let lastError = null;
+      let syncTimer = null;
+      let filter = "semua";
+      let search = "";
+      let data = loadLocal();
+
+      // Check debug mode (?debug=1 or #debug)
+      const isDebug = new URLSearchParams(window.location.search).get("debug") === "1" || window.location.hash.includes("debug");
+      if (isDebug) {
+        $("#diagPanel")?.classList.add("show");
+      }
+
+      function id() {
+        return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+      }
+
+      // URL Normalization & Source of Truth Management
+      function getScriptUrl() {
+        try {
+          const params = new URLSearchParams(window.location.search);
+          const paramUrl = (params.get("script") || params.get("url") || "").trim().replace(/\/+$/, "");
+          if (paramUrl && paramUrl.endsWith("/exec")) {
+            setScriptUrl(paramUrl);
+            const cleanHref = window.location.origin + window.location.pathname + (isDebug ? "?debug=1" : "");
+            window.history.replaceState({}, document.title, cleanHref);
+            return paramUrl;
+          }
+        } catch (e) {}
+
+        const stored = (localStorage.getItem(URL_KEY) || "").trim().replace(/\/+$/, "");
+        if (stored && stored.endsWith("/exec")) return stored;
+        return DEFAULT_SCRIPT_URL;
+      }
+
+      function setScriptUrl(url) {
+        const clean = String(url || "").trim().replace(/\/+$/, "");
+        if (clean) {
+          localStorage.setItem(URL_KEY, clean);
+        }
+      }
+
+      function clearScriptUrl() {
+        localStorage.removeItem(URL_KEY);
+      }
+
+      function loadLocal() {
+        try {
+          return JSON.parse(localStorage.getItem(STORE_KEY)) || seed;
+        } catch {
+          return seed;
+        }
+      }
+
+      function setStatus(text, mode = "") {
+        const el = $("#status");
+        if (el) {
+          el.textContent = text;
+          el.className = `status ${mode}`.trim();
+        }
+        updateDiagnostics();
+      }
+
+      function updateDiagnostics() {
+        if (!isDebug) return;
+        $("#diagConn").textContent = syncState === "error" ? "OFFLINE / ERROR" : "ONLINE";
+        $("#diagConn").style.color = syncState === "error" ? "#f87171" : "#4ade80";
+        $("#diagState").textContent = syncState.toUpperCase();
+        $("#diagClientRev").textContent = currentRevision;
+        $("#diagServerRev").textContent = lastServerRevision;
+        $("#diagLastPull").textContent = lastPullTime ? lastPullTime.toLocaleTimeString("id-ID") : "-";
+        $("#diagLastPush").textContent = lastPushTime ? lastPushTime.toLocaleTimeString("id-ID") : "-";
+        $("#diagLastError").textContent = lastError || "NONE";
+      }
+
+      function saveLocal(shouldSync = true) {
+        isDirty = true;
+        syncState = "dirty";
+        data.updatedAt = new Date().toISOString();
+        localStorage.setItem(STORE_KEY, JSON.stringify(data));
+        render();
+        updateDiagnostics();
+
+        if (shouldSync) {
+          scheduleSync();
+        }
+      }
+
+      function scheduleSync() {
+        clearTimeout(syncTimer);
+        syncTimer = setTimeout(pushToSheet, 400);
+      }
+
+      // SINGLE POST WITH WRITE VERIFICATION
+      function pushToSheet() {
+        const url = getScriptUrl();
+        if (!url) {
+          syncState = "error";
+          lastError = "URL Google Apps Script belum dikonfigurasi";
+          setStatus("Tersimpan lokal", "offline");
+          return;
+        }
+
+        if (syncState === "saving" || syncState === "verifying") {
+          if (DEBUG_SYNC) console.log("[SYNC] Push skipped: already in progress");
+          return;
+        }
+
+        syncState = "saving";
+        const beforeRevision = currentRevision;
+        setStatus("Menyimpan ke Sheet...", "saving");
+        lastPushTime = new Date();
+        lastError = null;
+
+        if (DEBUG_SYNC) console.log("[SYNC] PUSH starting with beforeRevision =", beforeRevision);
+
+        // Submit via hidden form to iframe (standard, reliable write)
+        try {
+          const form = document.getElementById("sheetPostForm");
+          const payloadInput = document.getElementById("sheetPayloadInput");
+          if (form && payloadInput) {
+            form.action = url + "?action=save";
+            payloadInput.value = JSON.stringify(data);
+            form.submit();
+          }
+        } catch (err) {
+          syncState = "error";
+          lastError = String(err);
+          setStatus("Gagal kirim data", "offline");
+          if (DEBUG_SYNC) console.error("[SYNC] POST Error:", err);
+          return;
+        }
+
+        // Start write verification loop
+        syncState = "verifying";
+        setStatus("Memverifikasi perubahan...", "verifying");
+        setTimeout(() => verifyWrite(beforeRevision, 1), 900);
+      }
+
+      function verifyWrite(beforeRevision, attempt) {
+        if (syncState !== "verifying") return;
+
+        if (DEBUG_SYNC) console.log(`[SYNC] Verifying write attempt #${attempt}...`);
+        const url = getScriptUrl();
+
+        const callback = "budgetVerify_" + id();
+        window[callback] = (response) => {
+          delete window[callback];
+          document.querySelector(`[data-jsonp="${callback}"]`)?.remove();
+
+          if (response && response.ok) {
+            const serverRev = Number(response.revision || 0);
+            lastServerRevision = serverRev;
+
+            if (serverRev > beforeRevision) {
+              // WRITE VERIFIED!
+              syncState = "synced";
+              isDirty = false;
+              currentRevision = serverRev;
+              localStorage.setItem(REV_KEY, String(currentRevision));
+              data = response.data || data;
+              localStorage.setItem(STORE_KEY, JSON.stringify(data));
+              render();
+              setStatus(`Tersimpan ke Sheet (Rev ${currentRevision})`, "online");
+              if (DEBUG_SYNC) console.log("[SYNC] SUCCESS: Write verified at rev", currentRevision);
+              return;
+            }
+          }
+
+          // If revision hasn't bumped yet and attempts < 6, retry verification
+          if (attempt < 6) {
+            setTimeout(() => verifyWrite(beforeRevision, attempt + 1), 1000);
+          } else {
+            syncState = "error";
+            lastError = "Verifikasi timeout: Spreadsheet belum mengonfirmasi perubahan.";
+            setStatus("Gagal sinkron (Timeout)", "offline");
+            if (DEBUG_SYNC) console.warn("[SYNC] Verification timeout. Server rev did not advance.");
+          }
+        };
+
+        const script = document.createElement("script");
+        script.src = `${url}?action=read&callback=${callback}&t=${Date.now()}`;
+        script.dataset.jsonp = callback;
+        script.onerror = () => {
+          delete window[callback];
+          script.remove();
+          if (attempt < 6) {
+            setTimeout(() => verifyWrite(beforeRevision, attempt + 1), 1000);
+          } else {
+            syncState = "error";
+            lastError = "Gagal memverifikasi: script error / koneksi terputus";
+            setStatus("Gagal sinkron", "offline");
+          }
+        };
+        document.body.append(script);
+      }
+
+      // POLLING / PULL (Never overwrites dirty client state)
+      function pullFromSheet(silent = false) {
+        const url = getScriptUrl();
+        if (!url) {
+          if (!silent) alert("URL Apps Script belum diisi");
+          return;
+        }
+
+        // PREVENT RACE CONDITION: Skip pull if client is saving or dirty
+        if (syncState === "saving" || syncState === "verifying" || isDirty) {
+          if (DEBUG_SYNC) console.log("[SYNC] PULL skipped: client is saving or has local dirty edits");
+          return;
+        }
+
+        if (!silent) setStatus("Mengambil data...", "");
+        const callback = "budgetPull_" + id();
+
+        window[callback] = (response) => {
+          delete window[callback];
+          document.querySelector(`[data-jsonp="${callback}"]`)?.remove();
+
+          if (!response || !response.ok) {
+            if (!silent) {
+              syncState = "error";
+              lastError = response?.error || "Gagal membaca Google Sheet";
+              setStatus("Gagal ambil data", "offline");
+              alert(lastError);
+            }
+            return;
+          }
+
+          const serverRev = Number(response.revision || 0);
+          lastServerRevision = serverRev;
+          lastPullTime = new Date();
+
+          if (serverRev > currentRevision || !currentRevision) {
+            currentRevision = serverRev;
+            localStorage.setItem(REV_KEY, String(currentRevision));
+            data = response.data || seed;
+            localStorage.setItem(STORE_KEY, JSON.stringify(data));
+            syncState = "synced";
+            isDirty = false;
+            render();
+            setStatus(`Sinkron dari Sheet (Rev ${currentRevision})`, "online");
+            if (DEBUG_SYNC) console.log("[SYNC] Pulled newer revision:", currentRevision);
+          } else {
+            if (!silent) setStatus("Data sudah paling baru", "online");
+          }
+          updateDiagnostics();
+        };
+
+        const script = document.createElement("script");
+        script.src = `${url}?action=read&callback=${callback}&t=${Date.now()}`;
+        script.dataset.jsonp = callback;
+        script.onerror = () => {
+          delete window[callback];
+          script.remove();
+          if (!silent) {
+            syncState = "error";
+            lastError = "Koneksi ke Web App gagal";
+            setStatus("Gagal konek", "offline");
+            alert("Tidak bisa mengambil data. Cek URL Apps Script dan izin aksesnya.");
+          }
+          updateDiagnostics();
+        };
+        document.body.append(script);
+      }
+
+      function cleanText(value, fallback = "") {
+        return String(value || fallback).trim();
+      }
+
+      function money(value) {
+        return Number(String(value || "").replace(/[^0-9]/g, "") || 0);
+      }
+
+      function weddingDate(value) {
+        return value
+          ? new Date(`${value}T00:00:00`).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+          : "Tanggal nikah belum diisi";
+      }
+
+      function statusOf(item) {
+        if (item.status) return item.status;
+        if (item.estimated > 0 && item.paid >= item.estimated) return "lunas";
+        if (item.paid > 0) return "dp";
+        return "belum";
+      }
+
+      function statusText(status) {
+        return status === "lunas" ? "Lunas" : status === "dp" ? "DP" : "Belum bayar";
+      }
+
+      function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
+      }
+
+      function formatNote(note) {
+        if (!note) return "";
+        const escaped = escapeHtml(note);
+        // Linkify URLs in note
+        return escaped.replace(/(https?:\/\/[^\s|]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">Buka Link ↗</a>');
+      }
+
+      function render() {
+        $("#title").textContent = `${data.couple.groom} & ${data.couple.bride}`;
+        $("#date").textContent = weddingDate(data.couple.weddingDate);
+        $("#bride").value = data.couple.bride || "";
+        $("#groom").value = data.couple.groom || "";
+        $("#wdate").value = data.couple.weddingDate || "";
+        $("#target").value = Number(data.targetBudget || 0).toLocaleString("id-ID");
+
+        const total = data.items.reduce((acc, item) => {
+          acc.estimated += Number(item.estimated || 0);
+          acc.paid += Number(item.paid || 0);
+          return acc;
+        }, { estimated: 0, paid: 0 });
+
+        const remaining = Math.max(total.estimated - total.paid, 0);
+        const left = Number(data.targetBudget || 0) - total.estimated;
+        const pct = total.estimated ? Math.min(Math.round((total.paid / total.estimated) * 100), 100) : 0;
+
+        $("#est").textContent = fmt.format(total.estimated);
+        $("#paid").textContent = fmt.format(total.paid);
+        $("#remain").textContent = fmt.format(remaining);
+        $("#left").textContent = fmt.format(left);
+        $("#left").style.color = left < 0 ? "var(--rose)" : "";
+        $("#pct").textContent = `${pct}%`;
+        $("#bar").style.width = `${pct}%`;
+        renderItems();
+        updateDiagnostics();
+      }
+
+      function renderItems() {
+        const box = $("#items");
+        const query = search.toLowerCase();
+        const visible = data.items.filter((item) => {
+          const haystack = `${item.name} ${item.category} ${item.note}`.toLowerCase();
+          return (filter === "semua" || statusOf(item) === filter) && haystack.includes(query);
+        });
+
+        box.innerHTML = "";
+        if (!visible.length) {
+          box.innerHTML = '<div class="empty">Belum ada biaya yang cocok.</div>';
+          return;
+        }
+
+        for (const item of visible) {
+          const status = statusOf(item);
+          const remaining = Math.max(Number(item.estimated || 0) - Number(item.paid || 0), 0);
+          const card = document.createElement("article");
+          card.className = "card";
+          card.innerHTML = `
+            <div class="card-top">
+              <div><span class="cat">${escapeHtml(item.category || "Seserahan")}</span><h3>${escapeHtml(item.name)}</h3></div>
+              <span class="badge ${status}">${statusText(status)}</span>
+            </div>
+            <div class="money">
+              <div><span>Estimasi</span><strong>${fmt.format(item.estimated)}</strong></div>
+              <div><span>Dibayar</span><strong>${fmt.format(item.paid)}</strong></div>
+              <div><span>Sisa</span><strong>${fmt.format(remaining)}</strong></div>
+            </div>
+            <p class="note">${[item.dueDate ? "Tempo: " + weddingDate(item.dueDate) : "", formatNote(item.note)].filter(Boolean).join(" | ")}</p>
+            <div class="actions">
+              <button data-action="pay" type="button">Update bayar</button>
+              <button data-action="edit" type="button">Edit harga</button>
+              <button data-action="delete" class="danger" type="button">Hapus</button>
+            </div>
+          `;
+          card.querySelector('[data-action="pay"]').onclick = () => updatePayment(item);
+          card.querySelector('[data-action="edit"]').onclick = () => editItem(item);
+          card.querySelector('[data-action="delete"]').onclick = () => deleteItem(item);
+          box.append(card);
+        }
+      }
+
+      function saveSettings() {
+        data.couple = {
+          bride: cleanText($("#bride").value, "Alviana"),
+          groom: cleanText($("#groom").value, "Bima"),
+          weddingDate: $("#wdate").value
+        };
+        data.targetBudget = money($("#target").value);
+        saveLocal();
+      }
+
+      function getTypeByCategory(category) {
+        const cat = String(category || "").trim();
+        const seserahanCats = [
+          "Alat Ibadah", "Skincare", "Body Care", "Pakaian",
+          "Pakaian Dalam", "Aksesoris", "Makeup", "Toiletries",
+          "Set Perhiasan"
+        ];
+        if (seserahanCats.includes(cat)) return "seserahan";
+        if (cat.toLowerCase() === "catering") return "catering";
+        if (cat.toLowerCase().includes("perlengkapan")) return "perlengkapan";
+        return "seserahan";
+      }
+
+      function normalizeItem(input, existing = {}) {
+        const estimated = money(input.estimated);
+        const paid = Math.min(money(input.paid), estimated);
+        const status = paid >= estimated && estimated > 0 ? "lunas" : paid > 0 ? "dp" : "belum";
+
+        const cat = cleanText(input.category || existing.category, "Seserahan");
+        const inferredType = input._type || existing._type || getTypeByCategory(cat);
+        const itemId = input.id || existing.id || ("temp-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6));
+
+        return {
+          ...existing,
+          id: itemId,
+          name: cleanText(input.name || existing.name, "Biaya baru"),
+          category: cat,
+          estimated,
+          paid,
+          dueDate: input.dueDate || existing.dueDate || "",
+          note: cleanText(input.note !== undefined ? input.note : existing.note),
+          status,
+          _type: inferredType,
+          _row: input._row !== undefined ? input._row : (existing._row || null)
+        };
+      }
+
+      function addItem(event) {
+        event.preventDefault();
+        const form = new FormData(event.target);
+        const cat = form.get("category");
+        const inferredType = getTypeByCategory(cat);
+        const tempId = "temp-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+        const newItem = normalizeItem({
+          id: tempId,
+          name: form.get("name"),
+          category: cat,
+          estimated: form.get("estimated"),
+          paid: form.get("paid"),
+          dueDate: form.get("dueDate"),
+          note: form.get("note"),
+          _type: inferredType,
+          _row: null
+        });
+
+        data.items.unshift(newItem);
+        event.target.reset();
+        event.target.paid.value = "0";
+        saveLocal(true);
+      }
+
+      function updatePayment(item) {
+        const next = prompt(`Jumlah yang sudah dibayar untuk ${item.name}`, Number(item.paid || 0).toLocaleString("id-ID"));
+        if (next === null) return;
+        Object.assign(item, normalizeItem({ ...item, paid: next }, item));
+        saveLocal();
+      }
+
+      function editItem(item) {
+        $("#editId").value = item.id;
+        $("#editName").value = item.name || "";
+        $("#editCategory").value = item.category || "";
+        $("#editEstimated").value = Number(item.estimated || 0).toLocaleString("id-ID");
+        $("#editPaid").value = Number(item.paid || 0).toLocaleString("id-ID");
+        $("#editDueDate").value = item.dueDate || "";
+        $("#editNote").value = item.note || "";
+        $("#editModal").classList.add("open");
+        $("#editName").focus();
+      }
+
+      function closeEditModal() {
+        $("#editModal").classList.remove("open");
+        $("#editForm").reset();
+      }
+
+      function saveEditForm(event) {
+        event.preventDefault();
+        const item = data.items.find((entry) => entry.id === $("#editId").value);
+        if (!item) {
+          closeEditModal();
+          return;
+        }
+
+        Object.assign(item, normalizeItem({
+          ...item,
+          name: $("#editName").value,
+          category: $("#editCategory").value,
+          estimated: $("#editEstimated").value,
+          paid: $("#editPaid").value,
+          dueDate: $("#editDueDate").value,
+          note: $("#editNote").value
+        }, item));
+
+        closeEditModal();
+        saveLocal();
+      }
+
+      function deleteItem(item) {
+        if (!confirm(`Hapus ${item.name}?`)) return;
+        data.items = data.items.filter((entry) => entry.id !== item.id);
+        saveLocal();
+      }
+
+      function exportData() {
+        $("#backupText").value = JSON.stringify(data);
+        $("#backupText").select();
+      }
+
+      function importData() {
+        try {
+          const next = JSON.parse($("#backupText").value);
+          if (!next || !next.couple || !Array.isArray(next.items)) throw new Error("Format backup tidak valid");
+          data = next;
+          saveLocal();
+          alert("Data berhasil diimport");
+        } catch (error) {
+          alert(error.message || "Backup tidak valid");
+        }
+      }
+
+      function resetData() {
+        if (!confirm("Reset semua data budget di perangkat ini?")) return;
+        data = JSON.parse(JSON.stringify(seed));
+        saveLocal();
+      }
+
+      // EVENT LISTENERS
+      $("#saveUrl").onclick = () => {
+        const url = $("#scriptUrl").value.trim().replace(/\/+$/, "");
+        if (!url) return alert("Tempel URL Web App Google Apps Script dulu (/exec)");
+        setScriptUrl(url);
+        setStatus("URL tersimpan", "online");
+        pullFromSheet();
+      };
+
+      $("#resetUrlBtn").onclick = () => {
+        if (confirm("Reset URL koneksi ke bawaan sistem?")) {
+          clearScriptUrl();
+          $("#scriptUrl").value = getScriptUrl();
+          setStatus("URL direset ke bawaan", "online");
+          pullFromSheet();
+        }
+      };
+
+      $("#shareLinkBtn").onclick = async () => {
+        const url = getScriptUrl();
+        const shareUrl = window.location.origin + window.location.pathname + "?script=" + encodeURIComponent(url);
+        try {
+          await navigator.clipboard.writeText(shareUrl);
+          alert("Link Auto-Connect berhasil disalin!\nKirimkan link ini ke pasangan/keluarga agar saat dibuka HP mereka langsung otomatis terhubung.");
+        } catch (err) {
+          prompt("Salin link berikut:", shareUrl);
+        }
+      };
+
+      $("#pullBtn").onclick = () => pullFromSheet(false);
+      $("#saveSettings").onclick = saveSettings;
+      $("#form").onsubmit = addItem;
+      $("#search").oninput = (event) => { search = event.target.value; render(); };
+      $("#filter").onchange = (event) => { filter = event.target.value; render(); };
+      $("#exportBtn").onclick = exportData;
+      $("#importBtn").onclick = importData;
+      $("#resetBtn").onclick = resetData;
+      $("#editForm").onsubmit = saveEditForm;
+      $("#cancelEdit").onclick = closeEditModal;
+      $("#editModal").onclick = (event) => {
+        if (event.target.id === "editModal") closeEditModal();
+      };
+
+      $("#diagHealthBtn")?.addEventListener("click", () => {
+        const url = getScriptUrl();
+        const callback = "healthCb_" + id();
+        window[callback] = (res) => {
+          delete window[callback];
+          alert("Health Check OK:\n" + JSON.stringify(res, null, 2));
+        };
+        const s = document.createElement("script");
+        s.src = `${url}?action=health&callback=${callback}&t=${Date.now()}`;
+        document.body.append(s);
+      });
+
+      // INITIAL STARTUP
+      $("#scriptUrl").value = getScriptUrl();
+      render();
+      pullFromSheet(true);
+
+      // Periodic Background Polling (every 12 seconds)
+      setInterval(() => {
+        pullFromSheet(true);
+      }, 12000);
+    </script>
+  </body>
+</html>
