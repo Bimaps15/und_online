@@ -3,7 +3,7 @@ import {
   CalendarDays,
   CalendarPlus,
   Clock3,
-  Copy,
+  ExternalLink,
   Gift as GiftIcon,
   Instagram,
   MapPin,
@@ -11,7 +11,7 @@ import {
   CheckSquare,
   Sparkles,
 } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Admin } from './components/Admin'
 import { Gallery } from './components/Gallery'
 import { Navbar } from './components/Navbar'
@@ -19,9 +19,9 @@ import { RSVP, Wishes } from './components/Forms'
 import { Button, GlassCard, Toast, WeddingSection } from './components/UI'
 import { GebyokCover } from './components/GebyokCover'
 import { FallingLeavesCanvas } from './components/FallingLeavesCanvas'
-import { GiftModal, RSVPModal, MapModal, GalleryModal } from './components/Modals'
+import { GiftModal, CashlessGiftModal, RSVPModal, MapModal, GalleryModal } from './components/Modals'
 import { MusicPlayer } from './components/MusicPlayer'
-import { weddingConfig as config } from './config/wedding'
+import { subscribeWeddingConfig, syncWeddingConfigFromServer, weddingConfig as config } from './config/wedding'
 import { useCountdown } from './hooks/useCountdown'
 import { useGuestName } from './hooks/useGuestName'
 
@@ -89,7 +89,7 @@ function Couple() {
   )
 }
 
-function Events({ onOpenMap }: { onOpenMap: () => void }) {
+function Events() {
   const events = [
     { title: 'Akad Nikah', event: config.akad },
     { title: 'Resepsi Pernikahan', event: config.reception },
@@ -99,70 +99,94 @@ function Events({ onOpenMap }: { onOpenMap: () => void }) {
     <WeddingSection id="event" eyebrow="Save the date" title="Rangkaian Acara">
       <Countdown />
       <div className="event-grid">
-        {events.map(({ title, event }) => (
-          <GlassCard key={title} className="event-card">
-            <CalendarDays className="text-gold" />
-            <p className="script-gold">{title}</p>
-            <h3>
-              {event.day}, {event.date}
-            </h3>
-            <div>
-              <Clock3 size={17} /> {event.time}
-            </div>
-            <div>
-              <MapPin size={17} /> {event.location}
-            </div>
-            <p>{event.address}</p>
-            <div className="event-card-actions">
-              <button className="button-inline-gold" onClick={onOpenMap}>
-                <MapPin size={15} />
-                <span>Lihat Peta Lokasi</span>
-              </button>
-            </div>
-          </GlassCard>
-        ))}
+        {events.map(({ title, event }) => {
+          const mapQuery = [event.location, event.address].filter(Boolean).join(', ')
+          const embedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&t=&z=15&ie=UTF8&iwloc=&output=embed`
+          const externalMapsUrl =
+            event.googleMapsUrl?.trim() ||
+            `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`
+
+          return (
+            <GlassCard key={title} className="event-card">
+              <CalendarDays className="text-gold" />
+              <p className="script-gold">{title}</p>
+              <h3>
+                {event.day}, {event.date}
+              </h3>
+              <div>
+                <Clock3 size={17} /> {event.time}
+              </div>
+              <div>
+                <MapPin size={17} /> {event.location}
+              </div>
+              <p>{event.address}</p>
+
+              <div className="event-map-container">
+                <iframe
+                  title={`Peta Lokasi ${title} - ${event.location}`}
+                  src={embedUrl}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  allowFullScreen={false}
+                />
+              </div>
+
+              <div className="event-card-actions">
+                <a
+                  href={externalMapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="button-inline-gold event-maps-link"
+                >
+                  <MapPin size={15} />
+                  <span>Buka di Google Maps</span>
+                  <ExternalLink size={14} />
+                </a>
+              </div>
+            </GlassCard>
+          )
+        })}
       </div>
     </WeddingSection>
   )
 }
 
-function GiftSection({ notify, onOpenGift }: { notify: (message: string) => void; onOpenGift: () => void }) {
-  const copy = async (value: string) => {
-    try {
-      await navigator.clipboard.writeText(value)
-      notify('Nomor rekening berhasil disalin')
-    } catch {
-      notify('Gagal menyalin. Silakan salin secara manual.')
-    }
-  }
+function GiftSection({
+  onOpenCashlessGift,
+}: {
+  onOpenCashlessGift: () => void
+}) {
+  const reduceMotion = useReducedMotion()
+
+  const itemMotion = (delay: number) =>
+    reduceMotion
+      ? {}
+      : {
+          initial: { opacity: 0, y: 18 },
+          whileInView: { opacity: 1, y: 0 },
+          viewport: { once: true, amount: 0.35 },
+          transition: { duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] as const },
+        }
 
   return (
-    <WeddingSection id="gift" eyebrow="A token of love" title="Kirim Hadiah">
-      <p className="section-intro">
-        Doa restu Anda merupakan hadiah terindah bagi kami. Namun apabila ingin memberikan tanda kasih, Anda dapat mengirimkannya melalui rekening berikut atau membuka pop-up amplop digital.
-      </p>
-
-      <div className="bank-grid">
-        {config.banks.map((bank) => (
-          <GlassCard key={bank.bank} className="bank-card">
-            <GiftIcon className="text-gold" />
-            <span>{bank.bank}</span>
-            <small>No. Rekening</small>
-            <strong>{bank.accountNumber}</strong>
-            <small>a.n. {bank.accountName}</small>
-            <Button onClick={() => copy(bank.accountNumber)}>
-              <Copy size={17} /> Salin Nomor Rekening
-            </Button>
-          </GlassCard>
-        ))}
-      </div>
-
-      <div className="center-action-wrapper mt-6">
-        <button className="button button-gold-luxury" onClick={onOpenGift}>
-          <GiftIcon size={18} />
-          <span>Buka Pop-Up Amplop Digital &amp; Hadiah Fisik</span>
-        </button>
-      </div>
+    <WeddingSection id="gift" eyebrow="A token of love" title="Wedding Gift">
+      <GlassCard className="wedding-gift-card">
+        <motion.div className="wedding-gift-icon-wrap" aria-hidden="true" {...itemMotion(0.05)}>
+          <GiftIcon className="text-gold" size={28} />
+        </motion.div>
+        <motion.h3 className="wedding-gift-card-title" {...itemMotion(0.14)}>
+          Wedding Gift
+        </motion.h3>
+        <motion.p className="wedding-gift-card-text" {...itemMotion(0.24)}>
+          Doa restu Anda merupakan karunia yang sangat berarti bagi kami. Jika memberi adalah ungkapan tanda kasih, Anda dapat memberi kado secara cashless.
+        </motion.p>
+        <motion.div className="wedding-gift-card-actions" {...itemMotion(0.34)}>
+          <Button type="button" className="wedding-gift-trigger-btn" onClick={onOpenCashlessGift}>
+            <GiftIcon size={18} />
+            <span>Klik Di Sini</span>
+          </Button>
+        </motion.div>
+      </GlassCard>
     </WeddingSection>
   )
 }
@@ -171,6 +195,7 @@ function MainInvitation({
   playing,
   onToggleMusic,
   notify,
+  onOpenCashlessGift,
   onOpenGift,
   onOpenRSVP,
   onOpenMap,
@@ -179,6 +204,7 @@ function MainInvitation({
   playing: boolean
   onToggleMusic: () => void
   notify: (message: string) => void
+  onOpenCashlessGift: () => void
   onOpenGift: () => void
   onOpenRSVP: () => void
   onOpenMap: () => void
@@ -248,6 +274,22 @@ function MainInvitation({
               {config.groom.shortName} <i className="ampersand-hero">&amp;</i> {config.bride.shortName}
             </h1>
 
+            {config.couplePhoto?.trim() && (
+              <motion.figure
+                className="hero-couple-photo"
+                initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={reduceMotion ? { duration: 0 } : { delay: 0.45, duration: 0.6, ease: 'easeOut' }}
+              >
+                <img
+                  src={config.couplePhoto}
+                  alt={`Foto ${config.groom.shortName} & ${config.bride.shortName}`}
+                  fetchPriority="high"
+                  decoding="async"
+                />
+              </motion.figure>
+            )}
+
             <p className="hero-quote">
               &quot;Dan di antara tanda-tanda kebesaran-Nya, Dia menciptakan pasangan-pasangan untukmu dari jenismu sendiri, agar kamu merasa tenteram kepadanya.&quot;
             </p>
@@ -278,7 +320,7 @@ function MainInvitation({
         <Couple />
 
         {/* RANGKAIAN ACARA */}
-        <Events onOpenMap={onOpenMap} />
+        <Events />
 
         {/* GALERI FOTO */}
         <Gallery onSelectPhoto={onSelectPhoto} />
@@ -304,7 +346,7 @@ function MainInvitation({
         <Wishes />
 
         {/* HADIAH DIGITAL */}
-        <GiftSection notify={notify} onOpenGift={onOpenGift} />
+        <GiftSection onOpenCashlessGift={onOpenCashlessGift} />
 
         {/* CLOSING SECTION */}
         <section className="closing">
@@ -343,11 +385,21 @@ export default function App() {
   const audioRef = useRef<HTMLAudioElement>(null)
 
   // Modal States
+  const [cashlessGiftModalOpen, setCashlessGiftModalOpen] = useState(false)
   const [giftModalOpen, setGiftModalOpen] = useState(false)
   const [rsvpModalOpen, setRsvpModalOpen] = useState(false)
   const [mapModalOpen, setMapModalOpen] = useState(false)
   const [galleryModalOpen, setGalleryModalOpen] = useState(false)
   const [activeGalleryIndex, setActiveGalleryIndex] = useState(0)
+  const [, setConfigVersion] = useState(0)
+
+  useEffect(() => {
+    const unsubscribe = subscribeWeddingConfig(() => {
+      setConfigVersion((v) => v + 1)
+    })
+    void syncWeddingConfigFromServer()
+    return unsubscribe
+  }, [])
 
   if (window.location.pathname.startsWith('/admin')) {
     return <Admin />
@@ -415,6 +467,7 @@ export default function App() {
           playing={playing}
           onToggleMusic={toggleMusic}
           notify={notify}
+          onOpenCashlessGift={() => setCashlessGiftModalOpen(true)}
           onOpenGift={() => setGiftModalOpen(true)}
           onOpenRSVP={() => setRsvpModalOpen(true)}
           onOpenMap={() => setMapModalOpen(true)}
@@ -423,6 +476,12 @@ export default function App() {
       )}
 
       {/* Interactive Modals */}
+      <CashlessGiftModal
+        isOpen={cashlessGiftModalOpen}
+        onClose={() => setCashlessGiftModalOpen(false)}
+        notify={notify}
+      />
+
       <GiftModal
         isOpen={giftModalOpen}
         onClose={() => setGiftModalOpen(false)}

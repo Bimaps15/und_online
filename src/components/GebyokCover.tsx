@@ -98,11 +98,11 @@ export function GebyokCover({ guestName, onOpen }: GebyokCoverProps) {
             >
               <div className="gebyok-plaque-border" />
 
-              {/* Cover Couple Photo Frame */}
+              {/* Cover Floral Emblem Frame */}
               <div className="cover-photo-vignette">
                 <img
-                  src={config.groom.photo}
-                  alt={`Mempelai ${config.groom.shortName} & ${config.bride.shortName}`}
+                  src="/images/cover-flower.jpg"
+                  alt="Ornamen Bunga Pernikahan"
                   onError={(e) => {
                     e.currentTarget.src = '/images/botanical-hero.png'
                   }}

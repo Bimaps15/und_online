@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState, FormEvent } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import {
   X,
   Copy,
@@ -14,6 +14,7 @@ import {
   Send,
   QrCode,
   Home,
+  ZoomIn,
 } from 'lucide-react'
 import { weddingConfig as config } from '../config/wedding'
 import { Turnstile } from '@marsidev/react-turnstile'
@@ -29,6 +30,8 @@ interface ModalShellProps {
 }
 
 export function ModalShell({ id, isOpen, onClose, title, subtitle, children }: ModalShellProps) {
+  const reduceMotion = useReducedMotion()
+
   useEffect(() => {
     if (!isOpen) return
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -48,17 +51,41 @@ export function ModalShell({ id, isOpen, onClose, title, subtitle, children }: M
         <div className="modal-backdrop-fixed" id={id} role="dialog" aria-modal="true">
           <motion.div
             className="modal-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={reduceMotion ? false : { opacity: 0 }}
+            animate={
+              reduceMotion
+                ? { opacity: 1 }
+                : { opacity: 1, transition: { duration: 0.24, ease: 'easeOut' } }
+            }
+            exit={
+              reduceMotion
+                ? { opacity: 0, transition: { duration: 0 } }
+                : { opacity: 0, transition: { duration: 0.16, ease: 'easeIn' } }
+            }
             onClick={onClose}
           />
           <motion.div
             className="modal-container-glass"
-            initial={{ opacity: 0, scale: 0.92, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.92, y: 20 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 260 }}
+            initial={reduceMotion ? false : { opacity: 0, scale: 0.95, y: 10 }}
+            animate={
+              reduceMotion
+                ? { opacity: 1, scale: 1, y: 0 }
+                : {
+                    opacity: 1,
+                    scale: 1,
+                    y: 0,
+                    transition: { duration: 0.28, ease: [0.22, 1, 0.36, 1] },
+                  }
+            }
+            exit={
+              reduceMotion
+                ? { opacity: 0, transition: { duration: 0 } }
+                : {
+                    opacity: 0,
+                    scale: 0.98,
+                    transition: { duration: 0.16, ease: 'easeIn' },
+                  }
+            }
           >
             <div className="modal-header">
               <div className="modal-header-text">
@@ -184,6 +211,249 @@ export function GiftModal({
         )}
       </div>
     </ModalShell>
+  )
+}
+
+/* ==========================================================================
+   1B. CASHLESS WEDDING GIFT MODAL (#cashlessGiftModal)
+   ========================================================================== */
+export function CashlessGiftModal({
+  isOpen,
+  onClose,
+  notify,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  notify: (msg: string) => void
+}) {
+  const reduceMotion = useReducedMotion()
+  const [copiedAccount, setCopiedAccount] = useState<string | null>(null)
+  const [zoomQris, setZoomQris] = useState(false)
+
+  useEffect(() => {
+    if (!isOpen) {
+      setZoomQris(false)
+      setCopiedAccount(null)
+    }
+  }, [isOpen])
+
+  const validBanks = config.banks
+    .filter(
+      (item) =>
+        Boolean(item.bank?.trim()) &&
+        Boolean(item.accountNumber?.trim()) &&
+        Boolean(item.accountName?.trim())
+    )
+    .slice(0, 2)
+
+  const hasQris = Boolean(config.qris?.enabled && config.qris?.image?.trim())
+
+  const handleCopyAccount = async (accountNumber: string) => {
+    try {
+      await navigator.clipboard.writeText(accountNumber)
+      setCopiedAccount(accountNumber)
+      notify('Nomor rekening berhasil disalin')
+      window.setTimeout(() => {
+        setCopiedAccount((prev) => (prev === accountNumber ? null : prev))
+      }, 2500)
+    } catch {
+      notify('Gagal menyalin. Silakan salin secara manual.')
+    }
+  }
+
+  return (
+    <>
+      <ModalShell
+        id="cashlessGiftModal"
+        isOpen={isOpen}
+        onClose={onClose}
+        title="Wedding Gift"
+        subtitle="Cashless Gift"
+      >
+        <div className="cashless-gift-modal-body">
+          <p className="modal-intro-p">
+            Terima kasih atas doa restu dan tanda kasih yang Anda berikan untuk mengiringi langkah awal pernikahan kami.
+          </p>
+
+          {validBanks.length > 0 && (
+            <div className="cashless-banks-list">
+              {validBanks.map((bank, index) => {
+                const isCopied = copiedAccount === bank.accountNumber
+                const offsetX = index % 2 === 0 ? -28 : 28
+                return (
+                  <motion.div
+                    key={`${bank.bank}-${bank.accountNumber}`}
+                    className="cashless-bank-card"
+                    initial={
+                      reduceMotion
+                        ? { opacity: 0 }
+                        : { opacity: 0, x: offsetX }
+                    }
+                    animate={
+                      reduceMotion
+                        ? { opacity: 1 }
+                        : { opacity: 1, x: 0 }
+                    }
+                    transition={
+                      reduceMotion
+                        ? { duration: 0.18, delay: index * 0.06, ease: 'easeOut' }
+                        : { duration: 0.45, delay: 0.1 + index * 0.14, ease: [0.22, 1, 0.36, 1] }
+                    }
+                  >
+                    <div className="cashless-bank-top">
+                      <span className="cashless-bank-label">Transfer Bank</span>
+                      <h3 className="cashless-bank-name">{bank.bank}</h3>
+                    </div>
+
+                    <div className="cashless-account-box">
+                      <div className="cashless-account-details">
+                        <small>Nomor Rekening</small>
+                        <strong className="cashless-account-number">{bank.accountNumber}</strong>
+                        <span className="cashless-account-holder">a.n. {bank.accountName}</span>
+                      </div>
+                    </div>
+
+                    <div className="cashless-bank-actions">
+                      <button
+                        type="button"
+                        className={`cashless-copy-btn ${isCopied ? 'is-copied' : ''}`}
+                        onClick={() => handleCopyAccount(bank.accountNumber)}
+                      >
+                        {isCopied ? (
+                          <>
+                            <CheckCircle2 size={17} />
+                            <span>Nomor rekening berhasil disalin</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy size={17} />
+                            <span>Salin Rekening</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </motion.div>
+                )
+              })}
+            </div>
+          )}
+
+          {hasQris && (
+            <div className="cashless-qris-card">
+              <div className="cashless-qris-header">
+                <QrCode size={18} className="text-gold" />
+                <div>
+                  <h3>QRIS</h3>
+                  <small>Scan kode QR di bawah ini menggunakan aplikasi perbankan atau dompet digital Anda</small>
+                </div>
+              </div>
+
+              <div className="cashless-qris-preview">
+                <img
+                  src={config.qris.image}
+                  alt="Kode QRIS Wedding Gift"
+                  onClick={() => setZoomQris(true)}
+                />
+              </div>
+
+              <button
+                type="button"
+                className="cashless-qris-zoom-btn"
+                onClick={() => setZoomQris(true)}
+              >
+                <ZoomIn size={17} />
+                <span>Perbesar Gambar</span>
+              </button>
+            </div>
+          )}
+
+          {validBanks.length === 0 && !hasQris && (
+            <div className="cashless-empty-note">
+              <p>Data rekening atau QRIS belum tersedia saat ini.</p>
+            </div>
+          )}
+
+          <div className="cashless-modal-footer">
+            <button type="button" className="cashless-close-mobile-btn" onClick={onClose}>
+              <X size={18} />
+              <span>Tutup</span>
+            </button>
+          </div>
+        </div>
+      </ModalShell>
+
+      <AnimatePresence>
+        {isOpen && zoomQris && hasQris && (
+          <div
+            className="qris-zoom-backdrop"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Preview ukuran penuh QRIS"
+          >
+            <motion.div
+              className="qris-zoom-overlay"
+              initial={reduceMotion ? false : { opacity: 0 }}
+              animate={
+                reduceMotion
+                  ? { opacity: 1 }
+                  : { opacity: 1, transition: { duration: 0.22, ease: 'easeOut' } }
+              }
+              exit={
+                reduceMotion
+                  ? { opacity: 0, transition: { duration: 0 } }
+                  : { opacity: 0, transition: { duration: 0.15, ease: 'easeIn' } }
+              }
+              onClick={() => setZoomQris(false)}
+            />
+            <motion.div
+              className="qris-zoom-dialog"
+              initial={reduceMotion ? false : { opacity: 0, scale: 0.95 }}
+              animate={
+                reduceMotion
+                  ? { opacity: 1, scale: 1 }
+                  : {
+                      opacity: 1,
+                      scale: 1,
+                      transition: { duration: 0.26, ease: [0.22, 1, 0.36, 1] },
+                    }
+              }
+              exit={
+                reduceMotion
+                  ? { opacity: 0, transition: { duration: 0 } }
+                  : {
+                      opacity: 0,
+                      scale: 0.98,
+                      transition: { duration: 0.15, ease: 'easeIn' },
+                    }
+              }
+            >
+              <div className="qris-zoom-header">
+                <span>Kode QRIS Wedding Gift</span>
+                <button
+                  type="button"
+                  className="modal-close-btn"
+                  onClick={() => setZoomQris(false)}
+                  aria-label="Tutup perbesaran QRIS"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="qris-zoom-image-wrap">
+                <img src={config.qris.image} alt="Kode QRIS Wedding Gift Diperbesar" />
+              </div>
+              <button
+                type="button"
+                className="cashless-close-mobile-btn"
+                onClick={() => setZoomQris(false)}
+              >
+                <X size={18} />
+                <span>Tutup Gambar</span>
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </>
   )
 }
 

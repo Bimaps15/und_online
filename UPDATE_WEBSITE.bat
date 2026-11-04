@@ -26,7 +26,7 @@ if errorlevel 1 (
 
 echo.
 echo [2/2] Mengunggah ke Cloudflare Pages...
-call npx wrangler pages deploy dist --project-name undangan-bima-alvi
+call npx wrangler pages deploy dist --project-name undangan-bima-alvi --branch=bimalvi
 if errorlevel 1 (
   echo.
   echo [GAGAL] Upload ke Cloudflare mengalami error.

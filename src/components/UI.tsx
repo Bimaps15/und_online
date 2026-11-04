@@ -18,8 +18,16 @@ export function GlassCard({ children, className = '' }: PropsWithChildren<{ clas
 }
 
 export function WeddingSection({ id, eyebrow, title, children, className = '' }: PropsWithChildren<{ id: string; eyebrow?: string; title: string; className?: string }>) {
+  const reduceMotion = useReducedMotion()
   return (
-    <motion.section id={id} className={`wedding-section ${className}`} initial={{ opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.65, ease: 'easeOut' }} viewport={{ once: false, amount: 0.18 }}>
+    <motion.section
+      id={id}
+      className={`wedding-section ${className}`}
+      initial={reduceMotion ? false : { opacity: 0, y: 28 }}
+      whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+      transition={reduceMotion ? { duration: 0 } : { duration: 0.65, ease: 'easeOut' }}
+      viewport={{ once: false, amount: 0.18 }}
+    >
       <div className="section-heading">{eyebrow && <span>{eyebrow}</span>}<h2>{title}</h2><LeafDivider /></div>
       {children}
     </motion.section>
