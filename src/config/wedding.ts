@@ -33,11 +33,17 @@ export type GalleryItemConfig = {
   alt: string
 }
 
+export type LoveStoryItemConfig = {
+  title?: string
+  content: string
+}
+
 export type WeddingConfigData = {
   groom: PersonConfig
   bride: PersonConfig
   /** Foto pasangan di bawah nama pada bagian "The Wedding Of"; kotak mengikuti ukuran foto. Kosongkan jika belum ada. */
   couplePhoto: string
+  openingVideo: { src: string }
   wedding: {
     day: string
     date: string
@@ -55,6 +61,7 @@ export type WeddingConfigData = {
   }
   turnstileSiteKey: string
   moderationEnabled: boolean
+  loveStory: LoveStoryItemConfig[]
 }
 
 export const defaultWeddingConfig: WeddingConfigData = {
@@ -75,8 +82,9 @@ export const defaultWeddingConfig: WeddingConfigData = {
     photo: '/images/botanical-hero.png',
   },
   // Foto pasangan (portrait/landscape bebas, kotak menyesuaikan ukuran foto). Isi dengan path (mis. '/images/couple.webp') atau URL foto asli.
-  // Biarkan kosong ('') jika belum ada — foto tidak akan ditampilkan.
+  // Biarkan kosong ('') jika belum ada â€” foto tidak akan ditampilkan.
   couplePhoto: '',
+  openingVideo: { src: '/video/bimalvi.mp4' },
   wedding: {
     day: 'Senin',
     date: '07 Desember 2026',
@@ -122,8 +130,30 @@ export const defaultWeddingConfig: WeddingConfigData = {
     { src: '/images/gallery-6.png', alt: 'Momen Bima dan Alviana 6' },
   ],
   music: { src: '/music/di-akhir-perang.m4a', title: 'Nadin Amizah - Di Akhir Perang' },
-  turnstileSiteKey: import.meta.env.VITE_TURNSTILE_SITE_KEY ?? '',
+  turnstileSiteKey: (import.meta as unknown as { env?: { VITE_TURNSTILE_SITE_KEY?: string } }).env?.VITE_TURNSTILE_SITE_KEY ?? '',
   moderationEnabled: false,
+  loveStory: [
+    {
+      title: 'Awal Pertemuan',
+      content:
+        'Pertemuan pertama kami berawal dari sebuah perkenalan sederhana yang tanpa disengaja menumbuhkan rasa nyaman di antara kami.',
+    },
+    {
+      title: 'Tumbuh Bersama',
+      content:
+        'Seiring berjalannya waktu, percakapan demi percakapan membawa kami saling mengenal dan memahami impian masing-masing.',
+    },
+    {
+      title: 'Menguatkan Komitmen',
+      content:
+        'Menemani satu sama lain melewati berbagai cerita menguatkan keyakinan kami untuk melangkah ke jenjang yang lebih serius.',
+    },
+    {
+      title: 'Menuju Ikatan Suci',
+      content:
+        'Dengan penuh rasa syukur serta doa dan restu keluarga, kami memantapkan hati untuk mengikat janji suci pernikahan.',
+    },
+  ],
 }
 
 const STORAGE_KEY = 'wedding_custom_config_v1'
@@ -133,6 +163,22 @@ function cloneConfig(source: WeddingConfigData): WeddingConfigData {
   return JSON.parse(JSON.stringify(source)) as WeddingConfigData
 }
 
+function normalizeLoveStoryItem(item: unknown): LoveStoryItemConfig | null {
+  if (typeof item === 'string') {
+    const trimmed = item.trim()
+    return trimmed ? { title: '', content: trimmed } : null
+  }
+  if (item && typeof item === 'object') {
+    const obj = item as { title?: unknown; content?: unknown; text?: unknown; heading?: unknown }
+    const content = String(obj.content ?? obj.text ?? '').trim()
+    const title = String(obj.title ?? obj.heading ?? '').trim()
+    if (content || title) {
+      return { title, content }
+    }
+  }
+  return null
+}
+
 function mergeConfig(base: WeddingConfigData, override?: Partial<WeddingConfigData> | null): WeddingConfigData {
   if (!override || typeof override !== 'object') return cloneConfig(base)
   return {
@@ -140,6 +186,7 @@ function mergeConfig(base: WeddingConfigData, override?: Partial<WeddingConfigDa
     groom: { ...base.groom, ...(override.groom ?? {}) },
     bride: { ...base.bride, ...(override.bride ?? {}) },
     couplePhoto: typeof override.couplePhoto === 'string' ? override.couplePhoto : base.couplePhoto,
+    openingVideo: { ...base.openingVideo, ...(override.openingVideo ?? {}) },
     wedding: { ...base.wedding, ...(override.wedding ?? {}) },
     akad: { ...base.akad, ...(override.akad ?? {}) },
     reception: { ...base.reception, ...(override.reception ?? {}) },
@@ -151,6 +198,11 @@ function mergeConfig(base: WeddingConfigData, override?: Partial<WeddingConfigDa
     music: { ...base.music, ...(override.music ?? {}) },
     turnstileSiteKey: base.turnstileSiteKey,
     moderationEnabled: override.moderationEnabled ?? base.moderationEnabled,
+    loveStory: Array.isArray(override.loveStory)
+      ? (override.loveStory.map(normalizeLoveStoryItem).filter(Boolean) as LoveStoryItemConfig[])
+      : Array.isArray(base.loveStory)
+      ? base.loveStory.map((item) => ({ ...item }))
+      : [],
   }
 }
 
@@ -172,6 +224,7 @@ function assignInPlace(next: WeddingConfigData) {
   Object.assign(weddingConfig.groom, next.groom)
   Object.assign(weddingConfig.bride, next.bride)
   weddingConfig.couplePhoto = next.couplePhoto
+  Object.assign(weddingConfig.openingVideo, next.openingVideo)
   Object.assign(weddingConfig.wedding, next.wedding)
   Object.assign(weddingConfig.akad, next.akad)
   Object.assign(weddingConfig.reception, next.reception)
@@ -179,6 +232,9 @@ function assignInPlace(next: WeddingConfigData) {
   Object.assign(weddingConfig.qris, next.qris)
   weddingConfig.gallery.splice(0, weddingConfig.gallery.length, ...next.gallery)
   Object.assign(weddingConfig.music, next.music)
+  weddingConfig.loveStory = Array.isArray(next.loveStory)
+    ? next.loveStory.map((item) => ({ title: item.title ?? '', content: item.content ?? '' }))
+    : []
   listeners.forEach((fn) => fn())
 }
 

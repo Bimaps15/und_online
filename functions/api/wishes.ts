@@ -1,3 +1,5 @@
+import { resolveGuest } from './_guest'
+import { personalLinkMessage } from '../../src/lib/guestIdentity'
 import { clean, hashIp, isRateLimited, json, verifyTurnstile, type Env } from './_shared'
 
 type Payload = { name?: unknown; message?: unknown; turnstileToken?: unknown }
@@ -6,8 +8,11 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
 }
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   try {
-    const body = await request.json<Payload>(); const name = clean(body.name, 100); const message = clean(body.message, 500)
-    if (!name) return json({ success: false, message: 'Nama wajib diisi' }, 400); if (!message) return json({ success: false, message: 'Ucapan wajib diisi' }, 400)
+    const guest = await resolveGuest(request, env)
+    if (!guest) return json({ success: false, message: personalLinkMessage }, 400)
+    const name = guest.name
+    const body = await request.json<Payload>(); const message = clean(body.message, 500)
+    if (!message) return json({ success: false, message: 'Ucapan wajib diisi' }, 400)
     if (!await verifyTurnstile(clean(body.turnstileToken, 2048), request, env)) return json({ success: false, message: 'Verifikasi keamanan gagal. Silakan coba lagi.' }, 403)
     const ipHash = await hashIp(request, env); if (await isRateLimited(env, 'wishes', ipHash)) return json({ success: false, message: 'Terlalu banyak permintaan. Tunggu sebentar lalu coba lagi.' }, 429)
     const approved = env.MODERATE_WISHES === 'true' ? 0 : 1

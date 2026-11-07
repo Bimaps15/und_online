@@ -1,10 +1,15 @@
-import { ChangeEvent, FormEvent, useEffect, useState } from 'react'
+import { ChangeEvent, FormEvent, useEffect, useRef, useState } from 'react'
 import {
+  ArrowDown,
   ArrowLeft,
+  ArrowUp,
+  Bold,
   CalendarCheck,
   CheckCircle2,
   CircleHelp,
+  Heart,
   ImagePlus,
+  Italic,
   KeyRound,
   LogOut,
   MessageCircle,
@@ -12,6 +17,7 @@ import {
   RotateCcw,
   Save,
   Trash2,
+  Underline,
   Upload,
   UserCheck,
   UserX,
@@ -27,6 +33,7 @@ import {
   weddingConfig,
   type WeddingConfigData,
 } from '../config/wedding'
+import { parseFormattedText } from '../lib/formatText'
 import { Button, Field, GlassCard, Toast } from './UI'
 
 type Stats = {
@@ -99,7 +106,7 @@ export function Admin() {
   })
   const [passwordInput, setPasswordInput] = useState('')
   const [loginError, setLoginError] = useState('')
-  const [activeTab, setActiveTab] = useState<'couple' | 'gallery' | 'event' | 'gift' | 'stats'>('couple')
+  const [activeTab, setActiveTab] = useState<'couple' | 'story' | 'gallery' | 'event' | 'gift' | 'stats'>('couple')
   const [formData, setFormData] = useState<WeddingConfigData>(() =>
     JSON.parse(JSON.stringify(weddingConfig)) as WeddingConfigData
   )
@@ -107,6 +114,7 @@ export function Admin() {
   const [toast, setToast] = useState('')
   const [stats, setStats] = useState<Stats>(emptyStats)
   const [statsUnavailable, setStatsUnavailable] = useState(false)
+  const textareaRefs = useRef<{ [key: number]: HTMLTextAreaElement | null }>({})
 
   const isAuthenticated = tokenHash === EXPECTED_ADMIN_HASH
 
@@ -257,17 +265,137 @@ export function Admin() {
     }
   }
 
+  const handleAddStorySentence = () => {
+    setFormData((prev) => ({
+      ...prev,
+      loveStory: [...(prev.loveStory ?? []), { title: '', content: '' }],
+    }))
+    notify('Slide baru ditambahkan')
+  }
+
+  const handleStoryTitleChange = (index: number, title: string) => {
+    setFormData((prev) => {
+      const list = [...(prev.loveStory ?? [])]
+      const item = list[index] ?? { title: '', content: '' }
+      list[index] = { ...item, title }
+      return { ...prev, loveStory: list }
+    })
+  }
+
+  const handleStoryContentChange = (index: number, content: string) => {
+    setFormData((prev) => {
+      const list = [...(prev.loveStory ?? [])]
+      const item = list[index] ?? { title: '', content: '' }
+      list[index] = { ...item, content }
+      return { ...prev, loveStory: list }
+    })
+  }
+
+  const handleMoveStoryUp = (index: number) => {
+    if (index <= 0) return
+    setFormData((prev) => {
+      const list = [...(prev.loveStory ?? [])]
+      const temp = list[index]
+      list[index] = list[index - 1]
+      list[index - 1] = temp
+      return { ...prev, loveStory: list }
+    })
+  }
+
+  const handleMoveStoryDown = (index: number) => {
+    setFormData((prev) => {
+      const list = [...(prev.loveStory ?? [])]
+      if (index >= list.length - 1) return prev
+      const temp = list[index]
+      list[index] = list[index + 1]
+      list[index + 1] = temp
+      return { ...prev, loveStory: list }
+    })
+  }
+
+  const handleDeleteStory = (index: number) => {
+    setFormData((prev) => {
+      const list = [...(prev.loveStory ?? [])]
+      list.splice(index, 1)
+      return { ...prev, loveStory: list }
+    })
+    notify(`Slide #${index + 1} dihapus`)
+  }
+
+  const applyFormattingToStory = (index: number, format: 'bold' | 'italic' | 'underline') => {
+    const textarea = textareaRefs.current[index]
+    const currentItem = formData.loveStory?.[index] ?? { title: '', content: '' }
+    const currentText = currentItem.content ?? ''
+
+    const tagMap = {
+      bold: { tag: 'b', placeholder: 'teks tebal' },
+      italic: { tag: 'i', placeholder: 'teks miring' },
+      underline: { tag: 'u', placeholder: 'teks garis bawah' },
+    }
+
+    const { tag, placeholder } = tagMap[format]
+    const openTag = `<${tag}>`
+    const closeTag = `</${tag}>`
+
+    if (!textarea) {
+      const next = currentText ? `${currentText} ${openTag}${placeholder}${closeTag}` : `${openTag}${placeholder}${closeTag}`
+      handleStoryContentChange(index, next)
+      return
+    }
+
+    const start = textarea.selectionStart ?? currentText.length
+    const end = textarea.selectionEnd ?? currentText.length
+    const selectedText = currentText.substring(start, end)
+
+    let nextText = ''
+    let newCursorStart = 0
+    let newCursorEnd = 0
+
+    if (selectedText.length > 0) {
+      nextText = currentText.substring(0, start) + openTag + selectedText + closeTag + currentText.substring(end)
+      newCursorStart = start + openTag.length
+      newCursorEnd = newCursorStart + selectedText.length
+    } else {
+      nextText = currentText.substring(0, start) + openTag + placeholder + closeTag + currentText.substring(end)
+      newCursorStart = start + openTag.length
+      newCursorEnd = newCursorStart + placeholder.length
+    }
+
+    handleStoryContentChange(index, nextText)
+
+    // Kembalikan fokus dan seleksi ke textarea
+    setTimeout(() => {
+      textarea.focus()
+      textarea.setSelectionRange(newCursorStart, newCursorEnd)
+    }, 0)
+  }
+
   const handleSaveAll = async () => {
     setSaving(true)
     try {
-      applyWeddingConfig(formData, true)
+      // Abaikan slide kosong saat menyimpan dan rapikan spasi
+      const cleanedStory = (formData.loveStory ?? [])
+        .map((item) => ({
+          title: (item.title ?? '').trim(),
+          content: (item.content ?? '').trim(),
+        }))
+        .filter((item) => item.content.length > 0 || item.title.length > 0)
+
+      const payload: WeddingConfigData = {
+        ...formData,
+        loveStory: cleanedStory,
+      }
+
+      setFormData(payload)
+      applyWeddingConfig(payload, true)
+
       const response = await fetch('/api/settings', {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
           'X-Admin-Token': tokenHash,
         },
-        body: JSON.stringify({ config: formData }),
+        body: JSON.stringify({ config: payload }),
       })
       if (response.ok) {
         notify('Semua perubahan berhasil disimpan!')
@@ -377,6 +505,14 @@ export function Admin() {
         >
           <Users size={17} />
           <span>Nama &amp; Foto Mempelai</span>
+        </button>
+        <button
+          type="button"
+          className={`admin-tab-btn ${activeTab === 'story' ? 'active' : ''}`}
+          onClick={() => setActiveTab('story')}
+        >
+          <Heart size={17} />
+          <span>Kisah Cinta ({(formData.loveStory ?? []).length})</span>
         </button>
         <button
           type="button"
@@ -605,6 +741,186 @@ export function Admin() {
           </GlassCard>
         </div>
         </>
+      )}
+
+      {/* TAB: KISAH CINTA */}
+      {activeTab === 'story' && (
+        <div className="admin-story-tab">
+          <GlassCard className="admin-editor-card">
+            <div className="admin-section-header">
+              <div>
+                <h3>Kelola Kisah Cinta</h3>
+                <p>
+                  Atur perjalanan cinta yang tampil sebagai slider teks di bawah Rangkaian Acara.
+                  Setiap baris mewakili satu slide kalimat. Kolom kosong akan otomatis diabaikan saat disimpan.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="admin-btn-secondary"
+                onClick={handleAddStorySentence}
+              >
+                <Plus size={16} />
+                <span>Tambah Kalimat</span>
+              </button>
+            </div>
+
+            {(!formData.loveStory || formData.loveStory.length === 0) ? (
+              <div className="admin-story-empty">
+                <p>Belum ada kalimat kisah cinta. Jika dikosongkan, bagian Kisah Cinta di undangan publik akan otomatis disembunyikan.</p>
+                <button
+                  type="button"
+                  className="admin-btn-secondary mt-3"
+                  onClick={handleAddStorySentence}
+                >
+                  <Plus size={16} />
+                  <span>Tambah Kalimat</span>
+                </button>
+              </div>
+            ) : (
+              <div className="admin-story-list">
+                {formData.loveStory.map((item, index) => (
+                  <div key={index} className="admin-story-item">
+                    <div className="admin-story-item-header">
+                      <div className="admin-story-badge-wrap">
+                        <span className="admin-story-badge">Slide {index + 1}</span>
+                        {item.title?.trim() && (
+                          <span className="admin-story-title-preview">
+                            {item.title}
+                          </span>
+                        )}
+                        <span className="admin-story-count-hint">
+                          ({index + 1} / {formData.loveStory.length})
+                        </span>
+                      </div>
+                      <div className="admin-story-item-actions">
+                        <button
+                          type="button"
+                          className="admin-story-action-btn"
+                          onClick={() => handleMoveStoryUp(index)}
+                          disabled={index === 0}
+                          title="Naikkan urutan"
+                          aria-label={`Naikkan slide #${index + 1}`}
+                        >
+                          <ArrowUp size={15} />
+                          <span>Naik</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="admin-story-action-btn"
+                          onClick={() => handleMoveStoryDown(index)}
+                          disabled={index === formData.loveStory.length - 1}
+                          title="Turunkan urutan"
+                          aria-label={`Turunkan slide #${index + 1}`}
+                        >
+                          <ArrowDown size={15} />
+                          <span>Turun</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="admin-story-action-btn danger"
+                          onClick={() => handleDeleteStory(index)}
+                          title="Hapus slide ini"
+                          aria-label={`Hapus slide #${index + 1}`}
+                        >
+                          <Trash2 size={15} />
+                          <span>Hapus</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* INPUT HEADING / JUDUL SLIDE */}
+                    <Field label={`Heading / Judul Slide #${index + 1}`}>
+                      <input
+                        type="text"
+                        value={item.title ?? ''}
+                        onChange={(e) => handleStoryTitleChange(index, e.target.value)}
+                        placeholder="Contoh: Awal Pertemuan (bisa dikosongkan jika tidak perlu)"
+                      />
+                    </Field>
+
+                    <div className="admin-story-field-wrap">
+                      <div className="admin-story-toolbar">
+                        <span className="admin-toolbar-label">Format:</span>
+                        <div className="admin-toolbar-actions">
+                          <button
+                            type="button"
+                            className="admin-toolbar-btn"
+                            onClick={() => applyFormattingToStory(index, 'bold')}
+                            title="Tebal (Bold) - <b>teks</b>"
+                            aria-label={`Format Tebal kalimat ${index + 1}`}
+                          >
+                            <Bold size={13} />
+                            <span>Bold</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="admin-toolbar-btn"
+                            onClick={() => applyFormattingToStory(index, 'italic')}
+                            title="Miring (Italic) - <i>teks</i>"
+                            aria-label={`Format Miring kalimat ${index + 1}`}
+                          >
+                            <Italic size={13} />
+                            <span>Italic</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="admin-toolbar-btn"
+                            onClick={() => applyFormattingToStory(index, 'underline')}
+                            title="Garis Bawah (Underscore) - <u>teks</u>"
+                            aria-label={`Format Garis Bawah kalimat ${index + 1}`}
+                          >
+                            <Underline size={13} />
+                            <span>Underscore</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <Field label={`Isi Kalimat #${index + 1}`}>
+                        <textarea
+                          ref={(el) => {
+                            textareaRefs.current[index] = el
+                          }}
+                          rows={3}
+                          value={item.content ?? ''}
+                          onChange={(e) => handleStoryContentChange(index, e.target.value)}
+                          placeholder="Tuliskan satu kalimat kisah cinta di sini... Sorot teks lalu pilih tombol Bold, Italic, atau Underscore."
+                        />
+                      </Field>
+
+                      {(item.title?.trim() || item.content?.trim()) && (
+                        <div className="admin-story-live-preview">
+                          <span className="admin-preview-title">Pratinjau Hasil Slide:</span>
+                          {item.title?.trim() && (
+                            <h4 className="admin-preview-heading">
+                              {parseFormattedText(item.title)}
+                            </h4>
+                          )}
+                          {item.content?.trim() && (
+                            <div className="admin-preview-content">
+                              {parseFormattedText(item.content)}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+
+                <div className="admin-story-footer-actions">
+                  <button
+                    type="button"
+                    className="admin-btn-secondary"
+                    onClick={handleAddStorySentence}
+                  >
+                    <Plus size={16} />
+                    <span>Tambah Kalimat</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </GlassCard>
+        </div>
       )}
 
       {/* TAB 2: GALERI FOTO */}

@@ -1,3 +1,5 @@
+import { useGuestIdentity } from '../hooks/GuestIdentityProvider'
+import { personalLinkMessage } from '../lib/guestIdentity'
 import { ReactNode, useEffect, useState, FormEvent } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import {
@@ -471,12 +473,14 @@ export function RSVPModal({
   notify: (msg: string) => void
   onSuccess?: () => void
 }) {
+  const guest = useGuestIdentity()
   const [state, setState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [feedback, setFeedback] = useState('')
   const [token, setToken] = useState('')
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (!guest.valid || guest.loading) return
     const formElement = e.currentTarget
     const formData = new FormData(formElement)
 
@@ -486,9 +490,10 @@ export function RSVPModal({
     try {
       const response = await fetch('/api/rsvp', {
         method: 'POST',
+        referrerPolicy: 'same-origin',
         headers: { 'content-type': 'application/json', accept: 'application/json' },
         body: JSON.stringify({
-          name: formData.get('name'),
+          name: guest.name,
           attendance: formData.get('attendance'),
           guestCount: Number(formData.get('guestCount')),
           message: formData.get('message'),
@@ -542,10 +547,9 @@ export function RSVPModal({
           <input
             type="text"
             name="name"
-            required
-            maxLength={100}
-            placeholder="Masukkan nama Anda"
-            autoComplete="name"
+            value={guest.name}
+            readOnly
+            autoComplete="off"
           />
         </Field>
 
@@ -584,7 +588,8 @@ export function RSVPModal({
           <Turnstile siteKey={config.turnstileSiteKey} onSuccess={setToken} options={{ theme: 'light' }} />
         ) : null}
 
-        <Button type="submit" disabled={state === 'loading'} className="w-full justify-center">
+        {!guest.valid && <p className="form-note" role="status">{personalLinkMessage}</p>}
+        <Button type="submit" disabled={!guest.valid || guest.loading || state === 'loading'} className="w-full justify-center">
           <Send size={18} />
           <span>{state === 'loading' ? 'Mengirim...' : 'Kirim Konfirmasi Kehadiran'}</span>
         </Button>

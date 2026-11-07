@@ -1,4 +1,4 @@
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import {
   CalendarDays,
   CalendarPlus,
@@ -14,10 +14,11 @@ import {
 import { useEffect, useRef, useState } from 'react'
 import { Admin } from './components/Admin'
 import { Gallery } from './components/Gallery'
+import { LoveStory } from './components/LoveStory'
 import { Navbar } from './components/Navbar'
 import { RSVP, Wishes } from './components/Forms'
 import { Button, GlassCard, Toast, WeddingSection } from './components/UI'
-import { GebyokCover } from './components/GebyokCover'
+import { OpeningSequence } from './components/OpeningSequence'
 import { FallingLeavesCanvas } from './components/FallingLeavesCanvas'
 import { GiftModal, CashlessGiftModal, RSVPModal, MapModal, GalleryModal } from './components/Modals'
 import { MusicPlayer } from './components/MusicPlayer'
@@ -217,7 +218,7 @@ function MainInvitation({
       if (navigator.share) {
         await navigator.share({
           title: `The Wedding of ${config.groom.shortName} & ${config.bride.shortName}`,
-          text: `Undangan pernikahan ${config.groom.shortName} & ${config.bride.shortName} — ${config.wedding.date}`,
+          text: `Undangan pernikahan ${config.groom.shortName} & ${config.bride.shortName} â€” ${config.wedding.date}`,
           url: window.location.href,
         })
       } else {
@@ -322,6 +323,9 @@ function MainInvitation({
         {/* RANGKAIAN ACARA */}
         <Events />
 
+        {/* KISAH CINTA */}
+        <LoveStory />
+
         {/* GALERI FOTO */}
         <Gallery onSelectPhoto={onSelectPhoto} />
 
@@ -380,9 +384,17 @@ function MainInvitation({
 export default function App() {
   const guestName = useGuestName()
   const [opened, setOpened] = useState(false)
+  const [openingComplete, setOpeningComplete] = useState(false)
   const [playing, setPlaying] = useState(false)
   const [toast, setToast] = useState('')
   const audioRef = useRef<HTMLAudioElement>(null)
+  const invitationRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!openingComplete) return
+    window.scrollTo({ top: 0, behavior: 'instant' })
+    invitationRef.current?.focus({ preventScroll: true })
+  }, [openingComplete])
 
   // Modal States
   const [cashlessGiftModalOpen, setCashlessGiftModalOpen] = useState(false)
@@ -431,7 +443,7 @@ export default function App() {
 
   const handleOpenCover = () => {
     setOpened(true)
-    window.setTimeout(playMusic, 350)
+    void playMusic()
   }
 
   const toggleMusic = () => {
@@ -456,23 +468,32 @@ export default function App() {
       {/* Background Audio */}
       <audio ref={audioRef} src={config.music.src} loop preload="none" />
 
-      {/* Cover with 3D Gebyok Doors & 3D Javanese Pop-Up Stage */}
-      <AnimatePresence>
-        {!opened && <GebyokCover guestName={guestName} onOpen={handleOpenCover} />}
-      </AnimatePresence>
+      <OpeningSequence
+        guestName={guestName}
+        onStart={handleOpenCover}
+        onComplete={() => setOpeningComplete(true)}
+      />
 
       {/* Main Invitation Page */}
       {opened && (
-        <MainInvitation
-          playing={playing}
-          onToggleMusic={toggleMusic}
-          notify={notify}
-          onOpenCashlessGift={() => setCashlessGiftModalOpen(true)}
-          onOpenGift={() => setGiftModalOpen(true)}
-          onOpenRSVP={() => setRsvpModalOpen(true)}
-          onOpenMap={() => setMapModalOpen(true)}
-          onSelectPhoto={openGalleryPhoto}
-        />
+        <div
+          className="invitation-content"
+          ref={invitationRef}
+          tabIndex={-1}
+          aria-hidden={!openingComplete}
+          {...(!openingComplete ? { inert: '' } : {})}
+        >
+          <MainInvitation
+            playing={playing}
+            onToggleMusic={toggleMusic}
+            notify={notify}
+            onOpenCashlessGift={() => setCashlessGiftModalOpen(true)}
+            onOpenGift={() => setGiftModalOpen(true)}
+            onOpenRSVP={() => setRsvpModalOpen(true)}
+            onOpenMap={() => setMapModalOpen(true)}
+            onSelectPhoto={openGalleryPhoto}
+          />
+        </div>
       )}
 
       {/* Interactive Modals */}
